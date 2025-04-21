@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Книжный магазин</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='checkout.js') }}"></script>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="user-profile">
+            <p>Вы вошли как: <strong>{{ current_user.full_name }}</strong></p>
+            <a href="{{ url_for('profile') }}" class="btn">Профиль</a>
+            <a href="http://localhost:5002/orders" class="btn">Заказы</a>
+            <form action="{{ url_for('logout') }}" method="POST" class="logout-form">
+                <button type="submit" class="btn">Выйти</button>
+            </form>
+        </div>
+    </div>
+    <div class="container">
+        <h1>Корзина</h1>
+        <a href="http://localhost:5000" class="back-link">← Назад к каталогу</a>
+        
+        {% if books %}
+        <div class="books-grid">
+            {% for book in books %}
+            <div class="book-card">
+                <h3>{{ book.title }}</h3>
+                <p class="author">{{ book.author }}</p>
+                <p class="price">{{ "%.2f"|format(book.price) }} ₽</p>
+
+                {% set cart_item = carts | selectattr("book_id", "equalto", book.id) | first %}
+                {% if cart_item %}
+                <div class="quantity-control">
+                    <span>Количество: {{ cart_item.quantity }}</span>
+    
+                    <div class="quantity-buttons">
+                        <form action="{{ url_for('edit_cart_item', cart_item_id=cart_item.id, action='dec') }}" method="POST">
+                            <button type="submit" class="btn quantity-btn">-</button>
+                        </form>
+                        <span class="quantity-value">{{ cart_item.quantity }}</span>
+                        <form action="{{ url_for('edit_cart_item', cart_item_id=cart_item.id, action='inc') }}" method="POST">
+                            <button type="submit" class="btn quantity-btn">+</button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="book-actions">
+                    <a href="http://localhost:5000/book/{{book.id}}" class="btn">Подробнее</a>
+                    <form action="{{ url_for('remove_from_cart', book_id=book.id, user_id=current_user.id) }}" method="POST" class="remove-form">
+                        <button type="submit" class="btn remove-btn">Удалить</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="cart-summary">
+            <div class="total-amount">
+                <h3><strong>Итого:</strong> {{ "%.2f"|format(total) }} ₽</h3>
+            </div>
+            <form id="checkoutForm">
+                <div class="form-group">
+                    <label for="payment_method">Способ оплаты:</label>
+                    <select id="payment_method" name="payment_method" required>
+                        <option value="1">Наличными, при получении</option>
+                        <option value="2">Банковской картой, при получении</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="shipping_address">Адрес доставки:</label>
+                    <input  type="text" 
+                            id="shipping_address" 
+                            name="shipping_address" 
+                            required
+                            value="г. Томск, ул. Зеленая, 15">
+                </div>
+                <button onclick="checkout()" class="checkout-btn">Оформить заказ</button>
+            </form>
+        </div>
+        {% else %}
+        <p class="no-results">Ваша корзина пуста</p>
+        {% endif %}
+    </div>
+</body>
+</html>

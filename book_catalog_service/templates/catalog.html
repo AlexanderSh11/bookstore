@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Книжный магазин</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='addToCart.js') }}"></script>
+</head>
+<body>
+    <div class="auth-container">
+        {% if current_user %}
+            <div class="user-profile">
+                <p>Вы вошли как: <strong>{{ current_user.username }}</strong></p>
+                <a href="http://localhost:5001/profile" class="btn">Профиль</a>
+                <a href="http://localhost:5001/cart" class="btn">Корзина</a>
+                <a href="http://localhost:5002/orders" class="btn">Заказы</a>
+                <form action="http://localhost:5001/logout" method="POST" class="logout-form">
+                    <button type="submit" class="btn">Выйти</button>
+                </form>
+            </div>
+        {% else %}
+            <div class="auth-links">
+                <a href="http://localhost:5001/login" class="btn">Вход</a>
+                <a href="http://localhost:5001/register" class="btn">Регистрация</a>
+            </div>
+        {% endif %}
+    </div>
+    <div class="container">
+        <h1>Книжный каталог</h1>
+        
+        <div class="sorting-options">
+            <span>Сортировать по:</span>
+                <a href="{{ url_for('catalog', sort_by='title') }}" class="{{ 'active' if sort_by == 'title' }}"> 
+                    Названию 
+                </a>
+    
+                 <a href="{{ url_for('catalog', sort_by='author') }}" class="{{ 'active' if sort_by == 'author' }}">
+                    Автору
+                </a>
+    
+                <a href="{{ url_for('catalog', sort_by='price') }}" class="{{ 'active' if sort_by == 'price' }}">
+                    Цене
+                </a>
+        </div>
+
+        <form action="/search" method="get" class="search">
+            <input type="text" name="q" value="{{ search_query or '' }}" placeholder="Поиск...">
+            <input type="hidden" name="sort_by" value="{{ sort_by or '' }}">
+            <button type="submit">Найти</button>
+        </form>
+        
+        {% if books %}
+        <div class="books-grid">
+            {% for book in books %}
+            <div class="book-card">
+                <h3>{{ book.title }}</h3>
+                <p class="author">{{ book.author }}</p>
+                <p class="genre">{{ book.genre.name if book.genre else 'Без жанра' }}</p>
+                <p class="price">{{ "%.2f"|format(book.price) }} ₽</p>
+                <div class="book-actions">
+                    <a href="{{ url_for('book_details', id=book.id) }}" class="btn">Подробнее</a>
+                    <button onclick="addToCart({{ book.id }}, {{ current_user.id }})" class="btn add-to-cart-btn">В корзину</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="no-results">Книги не найдены</p>
+        {% endif %}
+    </div>
+</body>
+</html>

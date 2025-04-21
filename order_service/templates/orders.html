@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Книжный магазин</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="user-profile">
+            <p>Вы вошли как: <strong>{{ current_user.username }}</strong></p>
+                <a href="http://localhost:5001/profile" class="btn">Профиль</a>
+                <a href="http://localhost:5001/cart" class="btn">Корзина</a>
+                <form action="http://localhost:5001/logout" method="POST" class="logout-form">
+                    <button type="submit" class="btn">Выйти</button>
+                </form>
+        </div>
+    </div>
+    <div class="container">
+        <h1>Заказы</h1>
+        <a href="http://localhost:5000" class="back-link">← Назад к каталогу</a>
+        
+        {% if orders %}
+    <div class="orders-grid">
+        {% for order in orders %}
+        <div class="order-card">
+            <div class="order-header">
+                <h3>Заказ #{{ order.id }}</h3>
+                <p class="order-date">Дата: {{ order.checkout_date.strftime('%d.%m.%Y %H:%M') }}</p>
+                <p class="order-payment">Способ оплаты: {{ order.payment.name }}</p>
+                <p class="order-address">Адрес доставки: {{ order.address }}</p>
+                <p class="order-status">Статус: {{ order.status.name }}</p>
+            </div>
+            <div class="order-actions">
+                <a href="{{ url_for('order_details', id=order.id) }}" class="btn">Подробнее</a>
+                {% if order.status_id == 1 %}
+                <form action="{{ url_for('cancel_order', order_id=order.id) }}" method="POST" class="cancel-form">
+                    <button type="submit" class="btn cancel-btn">Отменить</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="no-results">У вас пока нет заказов</p>
+    {% endif %}
+    </div>
+</body>
+</html>

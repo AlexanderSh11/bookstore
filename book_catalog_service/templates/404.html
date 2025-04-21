@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Книга не найдена</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Книга не найдена</h1>
+        <p>Запрошенная книга не существует в каталоге.</p>
+        <a href="{{ url_for('catalog') }}" class="btn">Вернуться в каталог</a>
+    </div>
+</body>
+</html>

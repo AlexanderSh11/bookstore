@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ book.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('catalog') }}" class="back-link">← Назад к каталогу</a>
+        
+        <div class="book-details">
+            <h1>{{ book.title }}</h1>
+            <h2>{{ book.author }}</h2>
+            
+            <div class="book-meta">
+                <span class="genre">{{ book.genre.name if book.genre else 'Без жанра' }}</span>
+                <span class="year">{{ book.year }} год</span>
+                <span class="publisher">{{ book.publisher }}</span>
+            </div>
+            
+            <div class="description">
+                {{ book.description if book.description else 'Описание отсутствует' }}
+            </div>
+            
+            <div class="price">{{ "%.2f"|format(book.price) }} ₽</div>
+        </div>
+    </div>
+</body>
+</html>

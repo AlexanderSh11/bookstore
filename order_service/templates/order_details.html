@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Заказ {{ order.id }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('get_orders')}}" class="back-link">← Назад к заказам</a>
+        
+        <div class="order-details">
+            <div class="order-header">
+                <div class="order-info">
+                    <h1>Заказ #{{ order.id }}</h1>
+                    <p>Дата оформления: {{ order.checkout_date.strftime('%d.%m.%Y %H:%M') }}</p>
+                </div>
+                <div class="order-status 
+                    {% if order.status_id == 3 %}status-cancelled
+                    {% elif order.status_id == 4 %}status-completed
+                    {% else %}status-processing{% endif %}">
+                    {{ order.status.name }}
+                </div>
+            </div>
+
+            <div class="delivery-info">
+                <h3>Информация о доставке</h3>
+                <p><strong>Адрес:</strong> {{ order.address }}</p>
+                <p><strong>Дата доставки:</strong> 
+                    {% if order.delivery_date %}
+                        {{ order.delivery_date.strftime('%d.%m.%Y') }}
+                    {% endif %}
+                </p>
+                <p><strong>Способ оплаты:</strong> {{ order.payment.name }}</p>
+            </div>
+            <div class="order-items">
+                <h2>Состав заказа</h2>
+                {% for item in items_in_order %}
+                {% set book = books | selectattr("id", "equalto", item.book_id) | first %}
+                {% if book %}
+                <div class="book-card">
+                    <h3 class="title">{{ book.title }}</h3>
+                    <p class="author">{{ book.author }}</p>
+                    <div class="book-meta">
+                        <span class="price">{{ "%.2f"|format(book.price) }} ₽ × {{ item.quantity }} = {{ "%.2f"|format(book.price * item.quantity) }} ₽</span>
+                    </div>
+                    <a href="http://localhost:5000/book/{{book.id}}" class="btn">Подробнее</a>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            <div class="order-summary">
+                <div class="total-amount">
+                    Итого: {{ "%.2f"|format(total) }} ₽
+                </div>
+            </div>
+
+            {% if order.status_id == 1 %}
+            <div class="order-actions">
+                <form action="{{ url_for('cancel_order', order_id=order.id) }}" method="POST" class="cancel-form">
+                    <button type="submit" class="btn cancel-btn">Отменить</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

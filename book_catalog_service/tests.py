@@ -99,7 +99,7 @@ class TestProductCatalog:
         assert book is None
 
 class TestEndpoints:
-    """Тесты эндпоинтов приложения"""
+    """Тесты эндпоинтов приложения для сортировки, поиска, работы с каталогом"""
     
     def test_catalog_route(self, client, books):
         """Тест главной страницы каталога"""

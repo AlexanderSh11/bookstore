@@ -96,7 +96,7 @@ class MockResponse:
         return str(self._json)
 
 class TestEndpoints:
-    """Тесты эндпоинтов приложения"""
+    """Тесты эндпоинтов приложения для управления заказами"""
     
     def test_orders_route_success(self, client, order, user):
         """Тест страницы заказов авторизованного пользователя"""

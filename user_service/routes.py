@@ -120,7 +120,7 @@ def init_app(app):
             flash('Недействительная сессия', 'error')
             return redirect(url_for('login'))
         
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         return render_template('profile.html', current_user=user)
 
     @app.route('/logout', methods=['POST'])

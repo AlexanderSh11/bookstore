@@ -1,4 +1,5 @@
 import json
+from flask import url_for
 import jwt
 from app import create_app
 from config import Config
@@ -109,17 +110,105 @@ class MockResponse:
 def generate_token(user_id, secret):
         return jwt.encode({'user_id': user_id}, secret, algorithm='HS256')
 
-class TestEndpoints:
-    """Тесты эндпоинтов приложения"""
+class TestUserEndpoints:
+    """Тесты эндпоинтов для регистрации, авторизации, выхода и профиля"""
 
     def test_get_user_by_id(self, client, user):
-        """Проверка получения пользователя по ID"""
-        response = client.get(f'/users/{user['id']}')
+        """Тест получения пользователя по ID"""
+        response = client.get(f'/users/{user["id"]}')
         assert response.status_code == 200
         data = response.get_json()
         assert data['email'] == user['email']
         assert data['username'] == user['full_name']
 
+    def test_get_user_by_id_notexisting(self, client, user):
+        """Тест получения несуществующего пользователя по ID"""
+        response = client.get('/users/999')
+        assert response.status_code == 404
+
+    def test_register(self, client, app):
+        """Тест регистрации нового пользователя"""
+        with app.app_context():
+            response = client.post('/register', data={
+                'full_name': 'Василий Васильев',
+                'email': 'newuser@gmail.com',
+                'phone': '9999999999',
+                'password': 'newpassword'
+            }, follow_redirects=True)
+            
+            assert response.status_code == 200
+            user = User.query.filter_by(email='newuser@gmail.com').first()
+            assert user is not None
+            assert user.check_password('newpassword')
+
+    def test_register_duplicate_email(self, client, user):
+        """Тест регистрации с уже существующим email"""
+        response = client.post('/register', data={
+            'full_name': 'Иван Петров',
+            'email': user['email'],
+            'phone': '0000000000',
+            'password': 'password'
+        }, follow_redirects=True)
+
+        assert 'Email уже зарегистрирован' in response.data.decode('utf-8')
+
+    def test_register_duplicate_phone(self, client, user):
+        """Тест регистрации с уже существующим телефоном"""
+        response = client.post('/register', data={
+            'full_name': 'Иван Петров',
+            'email': 'allo@gmail.com',
+            'phone': user['phone'],
+            'password': 'password'
+        }, follow_redirects=True)
+
+        assert 'Телефон уже зарегистрирован' in response.data.decode('utf-8')
+
+    def test_login_success(self, client, user):
+        """Тест успешного логина"""
+        response = client.post('/login', data={
+            'email': user['email'],
+            'password': 'password'
+        }, follow_redirects=False)
+
+        assert response.status_code == 302
+        assert 'auth_token' in response.headers.get('Set-Cookie', '')
+
+    def test_login_invalid_credentials(self, client, user):
+        """Тест входа с неправильными данными"""
+        response = client.post('/login', data={
+            'email': user['email'],
+            'password': 'wrongpassword'
+        }, follow_redirects=True)
+        # Переход на страницу авторизации
+        assert 'Нет аккаунта?' in response.data.decode('utf-8')
+
+    def test_profile_access(self, client, user):
+        """Тест доступа к профилю авторизованного пользователя"""
+        token = generate_token(user['id'], TestConfig.SECRET_KEY)
+        client.set_cookie(domain='localhost', key='auth_token', value=token)
+
+        response = client.get('/profile')
+        assert response.status_code == 200
+        assert 'Иван Петров' in response.data.decode('utf-8')
+
+    def test_profile_no_token(self, client):
+        """Тест доступа к профилю без авторизации"""
+        response = client.get('/profile', follow_redirects=True)
+        # Переход на страницу авторизации
+        assert 'Нет аккаунта?' in response.data.decode('utf-8')
+
+    def test_logout(self, client, user):
+        """Тест выхода из аккаунта"""
+        token = generate_token(user['id'], TestConfig.SECRET_KEY)
+        client.set_cookie(domain='localhost', key='auth_token', value=token)
+
+        response = client.post('/logout', follow_redirects=False)
+        assert response.status_code == 302
+        assert 'auth_token=;' in response.headers.get('Set-Cookie', '')
+
+
+class TestCartEndpoints:
+    """Тесты эндпоинтов для работы с корзиной"""
 
     def test_add_to_cart(self, client, user):
         """Добавление товара в корзину"""

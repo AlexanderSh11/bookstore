@@ -50,7 +50,7 @@ def init_app(app):
     @app.route('/order/<int:id>')
     def order_details(id):
         """Страница заказа пользователя по ID заказа"""
-        order = Order.query.get(id)
+        order = db.session.get(Order, id)
         if not order:
             return render_template('404.html'), 404
         user = get_current_user_from_token(app)
@@ -101,7 +101,7 @@ def init_app(app):
     @app.route('/order/cancel/<int:order_id>', methods=['POST'])
     def cancel_order(order_id):
         """Функция отмена заказа по его ID"""
-        order = Order.query.get(order_id)
+        order = db.session.get(Order, order_id)
         
         if order:
             order.status_id = 3

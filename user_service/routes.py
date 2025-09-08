@@ -120,9 +120,9 @@ def init_app(app):
             'phone': user.phone
         })
 
-    # корзина
     @app.route('/cart')
     def cart():
+        """Отображение корзины авторизованного пользователя"""
         token = request.cookies.get('auth_token')
         if not token:
             flash('Пожалуйста, войдите', 'error')
@@ -151,9 +151,10 @@ def init_app(app):
                 })
 
         return render_template('cart.html', current_user=user, books=books, carts=carts, total=total)
-    # корзина, получение книг
+    
     @app.route('/api/cart')
     def api_cart():
+        """Функция получения книг из корзины пользователя"""
         token = request.cookies.get('auth_token')
         if not token:
             flash('Пожалуйста, войдите', 'error')
@@ -180,8 +181,8 @@ def init_app(app):
         } for item in cart_items]
         return response
 
-    # корзина, получение книг
     def get_cart(user):
+        """Функция получения книг из корзины по пользователю"""
         user_id = user.id
         cart_items = Cart.query.filter_by(user_id=user_id).all()
         
@@ -192,6 +193,7 @@ def init_app(app):
         return cart_items, books
 
     def get_books(book_ids):
+        """Функция получения книг по их ID (запрос к сервису каталога)"""
         if not book_ids:
             return []
 
@@ -215,9 +217,9 @@ def init_app(app):
             app.logger.error(f"Failed to fetch books: {str(e)}")
             return []
 
-    # добавление в корзину
     @app.route('/cart/add', methods=['POST'])
     def add_to_cart():
+        """Функция добавления книги в корзину"""
         data = request.get_json()
             
         book_id = int(data['book_id'])
@@ -239,9 +241,9 @@ def init_app(app):
         flash('Товар успешно добавлен.', 'success')
         return redirect(url_for('cart'))
 
-    # удаление из корзины
     @app.route('/cart/remove/<int:user_id>/<int:book_id>', methods=['POST'])
     def remove_from_cart(user_id, book_id):
+        """Функция удаления книги из корзины"""
         cart_item = Cart.query.filter_by(book_id=book_id, user_id=user_id).first()
         
         if cart_item:
@@ -252,9 +254,10 @@ def init_app(app):
             flash('Товар не найден в корзине.', 'error')
         
         return redirect(url_for('cart'))
-    # изменение количества книг в корзине
+    
     @app.route('/cart/edit/<int:cart_item_id>/<action>', methods=['POST'])
     def edit_cart_item(cart_item_id, action):
+        """Функция изменения количества книг в корзине"""
         cart_item = Cart.query.get_or_404(cart_item_id)
         
         if action == 'inc':
@@ -274,6 +277,7 @@ def init_app(app):
 
     @app.route('/api/cart/clear', methods=['DELETE'])
     def clear_cart():
+        """Функция отчистки корзины с перенаправлением к заказам пользователя"""
         token = request.cookies.get('auth_token')
         if not token:
             flash('Пожалуйста, войдите', 'error')

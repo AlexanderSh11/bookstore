@@ -11,6 +11,7 @@ db.init_app(app)
 
 @app.route('/')
 def catalog():
+    """Запрос для страницы каталога"""
     current_user = get_current_user_from_token()
 
     sort_by = request.args.get('sort_by')
@@ -32,6 +33,7 @@ def catalog():
 
 @app.route('/search')
 def search():
+    """Запрос для поиска и сортировки"""
     query = request.args.get('q', '')
     sort_by = request.args.get('sort_by')
     current_user = get_current_user_from_token()
@@ -44,6 +46,7 @@ def search():
 
 @app.route('/book/<int:id>')
 def book_details(id):
+    """Страница со страницей товара (подробное описание), по ID"""
     book = ProductCatalog.get_book_by_id(id)
     if not book:
         return render_template('404.html'), 404
@@ -51,6 +54,7 @@ def book_details(id):
 
 @app.route('/books', methods=['GET'])
 def get_books():
+    """Получение списка книг по строке с их ID"""
     # Получаем строку с ID книг
     ids_str = request.args.get('ids', '')
     if not ids_str:
@@ -78,6 +82,7 @@ def get_books():
     return jsonify(books_data)
 
 def get_current_user_from_token():
+    """Функция получения пользователя по токену"""
     token = request.cookies.get('auth_token')
     if not token:
         return None

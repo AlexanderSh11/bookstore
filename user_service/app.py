@@ -19,25 +19,25 @@ CORS(app, resources={r"/*": {
     "supports_credentials": True
 }})
 
-# генерация токена
 def generate_jwt_token(user_id):
+    """Функция генерации токена с ID пользователя"""
     payload = {
         'user_id': user_id,
         'exp': datetime.now(timezone.utc) + timedelta(hours=24)
     }
     return jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
 
-# проверка токена
 def verify_jwt_token(token):
+    """Функция проверки токена"""
     try:
         payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
         return payload['user_id']
     except jwt.PyJWTError:
         return None
 
-# регистрация
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """Регистрация нового пользователя и отображение страницы регистрации"""
     if request.method == 'POST':
         full_name = request.form['full_name']
         email = request.form['email']
@@ -67,9 +67,9 @@ def register():
     
     return render_template('register.html')
 
-# вход
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """Авторизация пользователя и отображение страницы авторизации"""
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
@@ -95,9 +95,10 @@ def login():
         return response
     
     return render_template('login.html')
-# профиль
+
 @app.route('/profile')
 def profile():
+    """Страница профиля пользователя"""
     token = request.cookies.get('auth_token')
     if not token:
         flash('Пожалуйста, войдите', 'error')
@@ -111,9 +112,9 @@ def profile():
     user = User.query.get(user_id)
     return render_template('profile.html', current_user=user)
 
-# выход
 @app.route('/logout', methods=['POST'])
 def logout():
+    """Функция выхода из аккаунта с удалением access токена, переход на страницу каталога"""
     response = make_response(redirect('http://localhost:5000'))
     response.delete_cookie('auth_token')
     flash('Вы успешно вышли', 'success')
@@ -121,6 +122,7 @@ def logout():
 
 @app.route('/users/<int:id>')
 def get_user_by_id(id):
+    """Функция получения пользователя по ID"""
     user = User.query.get(id)
     if not user:
         return jsonify({'error': 'User not found'}), 404

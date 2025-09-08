@@ -20,6 +20,7 @@ CORS(app, resources={r"/*": {
 
 @app.route('/orders')
 def get_orders():
+    """Страница заказов пользователя"""
     current_user = get_current_user_from_token()
 
     # если токен устарел - очищаем cookie
@@ -36,6 +37,7 @@ def get_orders():
 
 @app.route('/order/<int:id>')
 def order_details(id):
+    """Страница заказа пользователя по ID заказа"""
     order = Order.query.get(id)
     user = get_current_user_from_token()
     if not user and request.cookies.get('auth_token'):
@@ -61,6 +63,7 @@ def order_details(id):
     return render_template('order_details.html', order=order, items_in_order=items_in_order, books=books, total=total)
 
 def get_books(book_ids):
+    """Функция получения книг по списку ID"""
     if not book_ids:
         return []
 
@@ -84,6 +87,7 @@ def get_books(book_ids):
         return []
 
 def get_current_user_from_token():
+    """Получение пользователя по токену"""
     token = request.cookies.get('auth_token')
     if not token:
         return None
@@ -107,9 +111,9 @@ def get_current_user_from_token():
     except requests.exceptions.RequestException:
         return None
 
-# отмена заказа
 @app.route('/order/cancel/<int:order_id>', methods=['POST'])
 def cancel_order(order_id):
+    """Функция отмена заказа по его ID"""
     order = Order.query.get(order_id)
     
     if order:
@@ -121,10 +125,10 @@ def cancel_order(order_id):
     
     return redirect(url_for('get_orders'))
 
-# оформление заказа
 @app.route('/checkout', methods=['POST'])
 @cross_origin(supports_credentials=True)
 def checkout():
+    """Функция оформления заказа из корзины"""
     try:
         # Проверка авторизации
         token = request.cookies.get('auth_token')

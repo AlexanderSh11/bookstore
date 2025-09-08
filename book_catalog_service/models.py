@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 
 db = SQLAlchemy()
 
@@ -50,20 +51,22 @@ class ProductCatalog:
     def search_books(query, sort_by):
         if not query:
             return []
-            
-        search_query = Book.query.join(Genre).filter(
-            (Book.title.ilike(f'%{query}%')) | 
-            (Book.author.ilike(f'%{query}%'))
-        )
+        
+        query_lower = query.lower()
+        books = Book.query.join(Genre).all()
+
+        filtered = [
+            book for book in books
+            if query_lower in book.title.lower() or query_lower in book.author.lower()
+        ]
         
         if sort_by:
             valid_sort_fields = {'title', 'author', 'price'}
             if sort_by in valid_sort_fields:
-                sort_column = getattr(Book, sort_by)
-                search_query = search_query.order_by(sort_column)
-                
-        return search_query.all()
+                filtered.sort(key=lambda b: getattr(b, sort_by))
+
+        return filtered
 
     @staticmethod
     def get_book_by_id(book_id):
-        return Book.query.get(book_id)
+        return db.session.get(Book, book_id)

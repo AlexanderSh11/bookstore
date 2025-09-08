@@ -1,4 +1,5 @@
 from flask import Flask
+import pytest
 from models import db
 from config import Config
 

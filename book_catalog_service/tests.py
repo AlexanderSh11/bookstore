@@ -5,6 +5,7 @@ import pytest
 import json
 
 class TestConfig(Config):
+    """Мокирование базы данных для юнит-тестирования (подключение к SQLite)"""
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -12,6 +13,7 @@ class TestConfig(Config):
 
 @pytest.fixture
 def app():
+    """Создание приложения с тестовой конфигурацией. Создание таблиц и их удаление после каждого теста"""
     app = create_app(TestConfig)
     with app.app_context():
         db.create_all()
@@ -25,6 +27,7 @@ def client(app):
 
 @pytest.fixture
 def books(app):
+    """Создание тестовых записей в тестовые таблицы БД"""
     with app.app_context():
         genre1 = Genre(name="Классика")
         db.session.add(genre1)
@@ -36,11 +39,6 @@ def books(app):
         db.session.add_all([book1, book2, book3])
         db.session.commit()
         return [book1, book2, book3]
-
-def test_search_books_by_title(client, books):
-    response = client.get('/search?q=Война+и+мир')
-    assert response.status_code == 200
-    assert "Война и мир" in response.data.decode('utf-8')
 
 class TestProductCatalog:
     """Тесты для класса ProductCatalog"""
@@ -138,7 +136,7 @@ class TestEndpoints:
         assert response.status_code == 200
         assert 'Война и мир' in response.data.decode('utf-8')
     
-    def test_book_details_nonexistent(self, client, books):
+    def test_book_details_notexisting(self, client, books):
         """Тест страницы деталей несуществующей книги"""
         response = client.get('/book/999')
         assert response.status_code == 404

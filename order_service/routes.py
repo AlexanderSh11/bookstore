@@ -4,11 +4,36 @@ import jwt
 from models import Order, OrderStatus, Payment, ItemsInOrder, db
 import requests
 
+def get_current_user_from_token(app):
+    """Получение пользователя по токену"""
+    token = request.cookies.get('auth_token')
+    if not token:
+        return None
+
+    try:
+        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        user_id = payload.get('user_id')
+
+        response = requests.get(
+            f'http://localhost:5001/users/{user_id}',
+            headers={'Authorization': f'Bearer {token}'},
+            timeout=3
+        )
+
+        if response.status_code == 200:
+            return response.json()
+        return None
+
+    except jwt.PyJWTError:
+        return None
+    except requests.exceptions.RequestException:
+        return None
+
 def init_app(app):
     @app.route('/orders')
     def get_orders():
         """Страница заказов пользователя"""
-        current_user = get_current_user_from_token()
+        current_user = get_current_user_from_token(app)
 
         # если токен устарел - очищаем cookie
         if not current_user and request.cookies.get('auth_token'):
@@ -26,16 +51,16 @@ def init_app(app):
     def order_details(id):
         """Страница заказа пользователя по ID заказа"""
         order = Order.query.get(id)
-        user = get_current_user_from_token()
+        if not order:
+            return render_template('404.html'), 404
+        user = get_current_user_from_token(app)
         if not user and request.cookies.get('auth_token'):
             response = make_response(redirect('http://localhost:5000'))
             response.delete_cookie('auth_token')
             return response
         if not user or order.user_id!=user["id"]:
-            return render_template('401.html')
+            return render_template('401.html'), 401
         
-        if not order:
-            return render_template('404.html'), 404
         items_in_order = ItemsInOrder.query.filter_by(order_id=id).all()
         # Запрашиваем данные о книгах из book_catalog_service
         book_ids = [item.book_id for item in items_in_order]
@@ -73,31 +98,6 @@ def init_app(app):
             app.logger.error(f"Failed to fetch books: {str(e)}")
             return []
 
-    def get_current_user_from_token():
-        """Получение пользователя по токену"""
-        token = request.cookies.get('auth_token')
-        if not token:
-            return None
-        
-        try:
-            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-            user_id = payload.get('user_id')
-            
-            response = requests.get(
-                f'http://localhost:5001/users/{user_id}',
-                headers={'Authorization': f'Bearer {token}'},
-                timeout=3
-            )
-            
-            if response.status_code == 200:
-                return response.json()
-            return None
-            
-        except jwt.PyJWTError:
-            return None
-        except requests.exceptions.RequestException:
-            return None
-
     @app.route('/order/cancel/<int:order_id>', methods=['POST'])
     def cancel_order(order_id):
         """Функция отмена заказа по его ID"""
@@ -122,7 +122,7 @@ def init_app(app):
             if not token:
                 return jsonify({'error': 'Требуется авторизация'}), 401
             
-            current_user = get_current_user_from_token()
+            current_user = get_current_user_from_token(app)
             if not current_user:
                 return jsonify({'error': 'Недействительный токен'}), 401
 

@@ -4,6 +4,31 @@ import jwt
 import requests
 from models import Cart, db, User
 
+def get_books(app, book_ids):
+        """Функция получения книг по их ID (запрос к сервису каталога)"""
+        if not book_ids:
+            return []
+
+        try:
+            # Делаем запрос к сервису каталога
+            response = requests.get(
+                'http://localhost:5000/books',
+                params={'ids': ','.join(map(str, book_ids))},
+                timeout=3
+            )
+            
+            if response.status_code == 200:
+                # Преобразуем JSON-ответ в список объектов Book
+                books_data = response.json()
+                return books_data  # Возвращаем данные о книгах
+            
+            app.logger.error(f"User service returned {response.status_code}")
+            return []
+            
+        except requests.exceptions.RequestException as e:
+            app.logger.error(f"Failed to fetch books: {str(e)}")
+            return []
+
 def init_app(app):
     def generate_jwt_token(user_id):
         """Функция генерации токена с ID пользователя"""
@@ -109,7 +134,7 @@ def init_app(app):
     @app.route('/users/<int:id>')
     def get_user_by_id(id):
         """Функция получения пользователя по ID"""
-        user = User.query.get(id)
+        user = db.session.get(User, id)
         if not user:
             return jsonify({'error': 'User not found'}), 404
             
@@ -133,7 +158,7 @@ def init_app(app):
             flash('Недействительная сессия', 'error')
             return redirect(url_for('login'))
         
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
 
         carts, books = get_cart(user)
         
@@ -165,7 +190,7 @@ def init_app(app):
             flash('Недействительная сессия', 'error')
             return redirect(url_for('login'))
         
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
 
         cart_items = Cart.query.filter_by(user_id=user_id).all()
         
@@ -191,31 +216,6 @@ def init_app(app):
         books = get_books(book_ids)
         
         return cart_items, books
-
-    def get_books(book_ids):
-        """Функция получения книг по их ID (запрос к сервису каталога)"""
-        if not book_ids:
-            return []
-
-        try:
-            # Делаем запрос к сервису каталога
-            response = requests.get(
-                'http://localhost:5000/books',
-                params={'ids': ','.join(map(str, book_ids))},
-                timeout=3
-            )
-            
-            if response.status_code == 200:
-                # Преобразуем JSON-ответ в список объектов Book
-                books_data = response.json()
-                return books_data  # Возвращаем данные о книгах
-            
-            app.logger.error(f"User service returned {response.status_code}")
-            return []
-            
-        except requests.exceptions.RequestException as e:
-            app.logger.error(f"Failed to fetch books: {str(e)}")
-            return []
 
     @app.route('/cart/add', methods=['POST'])
     def add_to_cart():
@@ -258,7 +258,7 @@ def init_app(app):
     @app.route('/cart/edit/<int:cart_item_id>/<action>', methods=['POST'])
     def edit_cart_item(cart_item_id, action):
         """Функция изменения количества книг в корзине"""
-        cart_item = Cart.query.get_or_404(cart_item_id)
+        cart_item = db.session.get(Cart, cart_item_id)
         
         if action == 'inc':
             cart_item.quantity += 1
@@ -277,7 +277,7 @@ def init_app(app):
 
     @app.route('/api/cart/clear', methods=['DELETE'])
     def clear_cart():
-        """Функция отчистки корзины с перенаправлением к заказам пользователя"""
+        """Функция очистки корзины с перенаправлением к заказам пользователя"""
         token = request.cookies.get('auth_token')
         if not token:
             flash('Пожалуйста, войдите', 'error')

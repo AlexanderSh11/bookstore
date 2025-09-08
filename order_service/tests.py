@@ -179,7 +179,7 @@ class TestEndpoints:
                 return MockResponse(json_data={'error': 'not found'}, status_code=404)
         mock_get.side_effect = mock_requests_get
 
-        # Мокирование запроса на отчистку корзины после оформления заказа
+        # Мокирование запроса на очистку корзины после оформления заказа
         mock_delete.return_value = MockResponse(json_data={'message': 'Cart cleared'}, status_code=200)
 
         # Генерация access-токена для мокированного пользователя, его сохранение в cookie-файлах

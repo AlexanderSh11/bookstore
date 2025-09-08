@@ -1,3 +1,4 @@
 bookstoreenv
 .env
 .vscode
+.idea

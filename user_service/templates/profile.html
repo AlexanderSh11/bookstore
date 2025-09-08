@@ -15,9 +15,8 @@
         <p><strong>Email:</strong> {{ current_user.email }}</p>
         <p><strong>Телефон:</strong> {{ current_user.phone }}</p>
     </div>
-    <form action="{{ url_for('logout') }}" method="POST" class="logout-form">
-            <button type="submit" class="btn">Выйти</button>
-    </form>
+    <a href="#" class="btn" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Выйти</a>
+    <form id="logout-form" action="{{ url_for('profile') }}" method="POST" style="display: none;"></form>
 </div>
 
 </body>

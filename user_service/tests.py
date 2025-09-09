@@ -182,6 +182,17 @@ class TestUserEndpoints:
         # Переход на страницу авторизации
         assert 'Нет аккаунта?' in response.data.decode('utf-8')
 
+    def test_profile_with_invalid_token(self, client, user):
+        """Тест авторизации (доступа к профилю) с истекшим токеном в cookie-файлах"""
+        
+        invalid_token = "notvalidtoken"
+        client.set_cookie(domain='localhost', key='auth_token', value=invalid_token)
+
+        response = client.get('/profile', follow_redirects=True)
+
+        assert response.status_code == 200
+        assert 'Нет аккаунта?' in response.data.decode('utf-8')
+
     def test_profile_access(self, client, user):
         """Тест доступа к профилю авторизованного пользователя"""
         token = generate_token(user['id'], TestConfig.SECRET_KEY)

@@ -196,7 +196,7 @@ def init_app(app):
         
         # Запрашиваем данные о книгах из book_catalog_service
         book_ids = [item.book_id for item in cart_items]
-        books = get_books(book_ids)
+        books = get_books(app, book_ids)
         
         response = [{
             'id': item.id,
@@ -213,7 +213,7 @@ def init_app(app):
         
         # Запрашиваем данные о книгах из book_catalog_service
         book_ids = [item.book_id for item in cart_items]
-        books = get_books(book_ids)
+        books = get_books(app, book_ids)
         
         return cart_items, books
 

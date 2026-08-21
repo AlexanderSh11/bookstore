@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Книжный магазин</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<a href="http://localhost:5000" class="back-link">← Назад к каталогу</a>
+<div class="profile-section">
+    <h2>Ваш профиль</h2>
+    <div class="profile-info">
+        <p><strong>ФИО:</strong> {{ current_user.full_name }}</p>
+        <p><strong>Email:</strong> {{ current_user.email }}</p>
+        <p><strong>Телефон:</strong> {{ current_user.phone }}</p>
+    </div>
+    <a href="#" class="btn" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Выйти</a>
+    <form id="logout-form" action="{{ url_for('profile') }}" method="POST" style="display: none;"></form>
+</div>
+
+</body>
+</html>

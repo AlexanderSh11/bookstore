@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Неавторизованный пользователь</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Вы не авторизовались</h1>
+        <a href="http://localhost:5001/login" class="btn">Авторизоваться</a>
+        <a href="http://localhost:5000" class="btn">Вернуться в каталог</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,87 @@
+services:
+  book-db:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: bookstore_catalog_db
+      POSTGRES_USER: ${DB_USER_CATALOG}
+      POSTGRES_PASSWORD: ${DB_PASSWORD_CATALOG}
+    ports:
+      - "5432:5432" # Внешний порт, чтобы не конфликтовать с другими БД
+    volumes:
+      - bookstore-catalog-db-data:/var/lib/postgresql/data
+    networks:
+      - bookstore-network
+
+  user-db:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: bookstore_user_db
+      POSTGRES_USER: ${DB_USER_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD_USER}
+    ports:
+      - "5433:5432"
+    volumes:
+      - bookstore-user-db-data:/var/lib/postgresql/data
+    networks:
+      - bookstore-network
+
+  order-db:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: bookstore_order_db
+      POSTGRES_USER: ${DB_USER_ORDER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD_ORDER}
+    ports:
+      - "5434:5432"
+    volumes:
+      - bookstore-order-db-data:/var/lib/postgresql/data
+    networks:
+      - bookstore-network
+
+  book_catalog_service:
+    build: ./book_catalog_service
+    ports:
+      - "5000:5000" # Порт хоста:порт контейнера
+    depends_on:
+      - book-db
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER_CATALOG}:${DB_PASSWORD_CATALOG}@book-db:5432/bookstore_catalog_db
+    networks:
+      - bookstore-network
+
+  user_service:
+    build: ./user_service
+    ports:
+      - "5001:5000"
+    depends_on:
+      - user-db
+      - book_catalog_service
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER_USER}:${DB_PASSWORD_USER}@user-db:5432/bookstore_user_db
+      - BOOK_CATALOG_URL=http://book_catalog_service:5000
+    networks:
+      - bookstore-network
+
+  order_service:
+    build: ./order_service
+    ports:
+      - "5002:5000"
+    depends_on:
+      - order-db
+      - book_catalog_service
+      - user_service
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER_ORDER}:${DB_PASSWORD_ORDER}@order-db:5432/bookstore_order_db
+      - BOOK_CATALOG_URL=http://book_catalog_service:5000
+      - USER_SERVICE_URL=http://user_service:5000
+    networks:
+      - bookstore-network
+
+volumes:
+  bookstore-catalog-db-data:
+  bookstore-user-db-data:
+  bookstore-order-db-data:
+
+networks:
+  bookstore-network:
+    driver: bridge

@@ -15,7 +15,7 @@ def get_current_user_from_token(app):
         user_id = payload.get('user_id')
 
         response = requests.get(
-            f'http://localhost:5001/users/{user_id}',
+            f'http://user_service:5001/users/{user_id}',
             headers={'Authorization': f'Bearer {token}'},
             timeout=3
         )
@@ -37,7 +37,7 @@ def init_app(app):
 
         # если токен устарел - очищаем cookie
         if not current_user and request.cookies.get('auth_token'):
-            response = make_response(redirect('http://localhost:5000'))
+            response = make_response(redirect('http://book_catalog_service:5000'))
             response.delete_cookie('auth_token')
             return response
         if not current_user:
@@ -55,7 +55,7 @@ def init_app(app):
             return render_template('404.html'), 404
         user = get_current_user_from_token(app)
         if not user and request.cookies.get('auth_token'):
-            response = make_response(redirect('http://localhost:5000'))
+            response = make_response(redirect('http://book_catalog_service:5000'))
             response.delete_cookie('auth_token')
             return response
         if not user or order.user_id!=user["id"]:
@@ -82,7 +82,7 @@ def init_app(app):
         try:
             # Делаем запрос к сервису каталога
             response = requests.get(
-                'http://localhost:5000/books',
+                'http://book_catalog_service:5000/books',
                 params={'ids': ','.join(map(str, book_ids))},
                 timeout=3
             )
@@ -134,7 +134,7 @@ def init_app(app):
             
             # Получение корзины
             cart_response = requests.get(
-                "http://localhost:5001/api/cart",
+                "http://user_service:5001/api/cart",
                 cookies={'auth_token': token},
                 headers={'Content-Type': 'application/json'}
             )
@@ -167,7 +167,7 @@ def init_app(app):
                 db.session.add(order_item)
             # Очистка корзины
             clear_response = requests.delete(
-                "http://localhost:5001/api/cart/clear",
+                "http://user_service:5001/api/cart/clear",
                 cookies={'auth_token': token}
             )
             

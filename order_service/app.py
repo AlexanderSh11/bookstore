@@ -10,6 +10,9 @@ def create_app(config_class=Config):
     app.config['JSON_AS_ASCII'] = False
     db.init_app(app)
 
+    with app.app_context():
+        db.create_all()
+
     CORS(app, resources={r"/*": {
         "origins": "*",
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -23,4 +26,4 @@ def create_app(config_class=Config):
     return app
 
 if __name__ == '__main__':
-    create_app().run(debug=True, port=5002)
+    create_app().run(debug=True, host='0.0.0.0', port=5002)

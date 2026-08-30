@@ -86,7 +86,7 @@ def init_app(app):
             user_id = payload.get('user_id')
             
             response = requests.get(
-                f'http://localhost:5001/users/{user_id}',
+                f'http://user_service:5000/users/{user_id}',
                 headers={'Authorization': f'Bearer {token}'},
                 timeout=3
             )

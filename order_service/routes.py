@@ -15,7 +15,7 @@ def get_current_user_from_token(app):
         user_id = payload.get('user_id')
 
         response = requests.get(
-            f'http://user_service:5001/users/{user_id}',
+            f'http://user_service:5000/users/{user_id}',
             headers={'Authorization': f'Bearer {token}'},
             timeout=3
         )
@@ -37,7 +37,7 @@ def init_app(app):
 
         # если токен устарел - очищаем cookie
         if not current_user and request.cookies.get('auth_token'):
-            response = make_response(redirect('http://book_catalog_service:5000'))
+            response = make_response(redirect('http://localhost:5000'))
             response.delete_cookie('auth_token')
             return response
         if not current_user:
@@ -55,7 +55,7 @@ def init_app(app):
             return render_template('404.html'), 404
         user = get_current_user_from_token(app)
         if not user and request.cookies.get('auth_token'):
-            response = make_response(redirect('http://book_catalog_service:5000'))
+            response = make_response(redirect('http://localhost:5000'))
             response.delete_cookie('auth_token')
             return response
         if not user or order.user_id!=user["id"]:
@@ -115,10 +115,13 @@ def init_app(app):
     @app.route('/checkout', methods=['POST'])
     @cross_origin(supports_credentials=True)
     def checkout():
+        print('🔥 CHECKOUT STARTED')
         """Функция оформления заказа из корзины"""
         try:
             # Проверка авторизации
+            print('📌 Step 1: Checking token...')
             token = request.cookies.get('auth_token')
+            print('✅ Token found:', token[:20], '...')
             if not token:
                 return jsonify({'error': 'Требуется авторизация'}), 401
             
@@ -131,10 +134,10 @@ def init_app(app):
                 return jsonify({'error': 'Запрос должен быть в формате JSON'}), 400
                 
             data = request.get_json()
-            
+
             # Получение корзины
             cart_response = requests.get(
-                "http://user_service:5001/api/cart",
+                "http://user_service:5000/api/cart",
                 cookies={'auth_token': token},
                 headers={'Content-Type': 'application/json'}
             )
@@ -167,14 +170,14 @@ def init_app(app):
                 db.session.add(order_item)
             # Очистка корзины
             clear_response = requests.delete(
-                "http://user_service:5001/api/cart/clear",
+                "http://user_service:5000/api/cart/clear",
                 cookies={'auth_token': token}
             )
             
             if clear_response.status_code != 200:
                 db.session.rollback()
                 return jsonify({'error': 'Ошибка при очистке корзины'}), 500
-                
+
             db.session.commit()
             
             return redirect(url_for('get_orders'))

@@ -94,7 +94,7 @@ def init_app(app):
             token = generate_jwt_token(user.id)
             
             # ответ с установкой cookie
-            response = make_response(redirect('http://book_catalog_service:5000'))
+            response = make_response(redirect('http://localhost:5000'))
             response.set_cookie(
                 'auth_token',
                 token,
@@ -126,7 +126,7 @@ def init_app(app):
     @app.route('/logout', methods=['POST'])
     def logout():
         """Функция выхода из аккаунта с удалением access токена, переход на страницу каталога"""
-        response = make_response(redirect('http://book_catalog_service:5000'))
+        response = make_response(redirect('http://localhost:5000'))
         response.delete_cookie('auth_token')
         flash('Вы успешно вышли', 'success')
         return response
@@ -290,4 +290,4 @@ def init_app(app):
         Cart.query.filter_by(user_id=user_id).delete()
         db.session.commit()
         
-        return redirect("http://order_service:5002/orders")
+        return redirect("http://localhost:5002/orders")

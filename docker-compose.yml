@@ -46,6 +46,7 @@ services:
       - book-db
     environment:
       - DATABASE_URL=postgresql://${DB_USER_CATALOG}:${DB_PASSWORD_CATALOG}@book-db:5432/bookstore_catalog_db
+      - SECRET_KEY=${SECRET_KEY}
     networks:
       - bookstore-network
 
@@ -59,6 +60,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://${DB_USER_USER}:${DB_PASSWORD_USER}@user-db:5432/bookstore_user_db
       - BOOK_CATALOG_URL=http://book_catalog_service:5000
+      - SECRET_KEY=${SECRET_KEY}
     networks:
       - bookstore-network
 
@@ -74,6 +76,7 @@ services:
       - DATABASE_URL=postgresql://${DB_USER_ORDER}:${DB_PASSWORD_ORDER}@order-db:5432/bookstore_order_db
       - BOOK_CATALOG_URL=http://book_catalog_service:5000
       - USER_SERVICE_URL=http://user_service:5000
+      - SECRET_KEY=${SECRET_KEY}
     networks:
       - bookstore-network
 
